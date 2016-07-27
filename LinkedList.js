@@ -182,10 +182,8 @@ LinkedList.prototype.addSortedByValue = function (entry, key) {
 LinkedList.prototype.each = function (callback) {
  
     if (typeof (callback) !== "function") {
-        if (undefined !== Logger) {
-            Logger.ERROR("foreach: callback was not valid.");
-        } else if (undefined !== console) {
-            console.log("foreach: callback was not valid.");
+        if (undefined !== console) {
+            console.error("foreach: callback was not valid.");
         }
     }
  
@@ -207,10 +205,8 @@ LinkedList.prototype.each = function (callback) {
 LinkedList.prototype.eachReverse = function (callback) {
  
     if (typeof (callback) !== "function") {
-        if (undefined !== Logger) {
-            Logger.ERROR("foreach: callback was not valid.");
-        } else if (undefined !== console) {
-            console.log("foreach: callback was not valid.");
+        if (undefined !== console) {
+            console.error("foreach: callback was not valid function.");
         }
     }
  
