@@ -1,0 +1,16 @@
+{
+    "name": "async-indexed-db",
+    "version": "1.0.0",
+    "description": "Asynchronous database access in browser.",
+    "private": true,
+    "scripts": {
+        "compile": "tsc ./dbMap.ts --lib es2016,dom --outFile ./.dist/dbMap.js"
+    },
+    "devDependencies": {
+        "typescript": "^4.7.3"
+    },
+    "engines": {
+        "node": ">= 6.0.0",
+        "npm": ">= 3.0.0"
+    }
+}
