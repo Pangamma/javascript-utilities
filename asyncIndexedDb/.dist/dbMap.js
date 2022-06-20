@@ -34,9 +34,9 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
+var _this = this;
 var C_DB_NAME = "dbMap";
 var C_DB_VERS = 1;
-var C_DB_STORE = "entries";
 var DbMapUtil = /** @class */ (function () {
     function DbMapUtil() {
     }
@@ -56,9 +56,53 @@ var DbMapUtil = /** @class */ (function () {
     return DbMapUtil;
 }());
 var DbMap = /** @class */ (function () {
-    function DbMap() {
+    function DbMap(table) {
+        var _this = this;
+        this.isInitialized = false;
+        this.dbRef = undefined;
+        this.initSchemaAsync = function () { return __awaiter(_this, void 0, void 0, function () {
+            var _this = this;
+            return __generator(this, function (_a) {
+                return [2 /*return*/, new Promise(function (resolve, reject) { return __awaiter(_this, void 0, void 0, function () {
+                        var opReq, failFunc, zelf;
+                        return __generator(this, function (_a) {
+                            console.log("Initializing ".concat(C_DB_NAME, " v").concat(C_DB_VERS, " schema."));
+                            opReq = window.indexedDB.open(C_DB_NAME, C_DB_VERS);
+                            failFunc = function () { console.error("Failed to init ".concat(C_DB_NAME, " schema.")); reject(false); };
+                            opReq.onerror = failFunc;
+                            opReq.onblocked = failFunc;
+                            zelf = this;
+                            opReq.onupgradeneeded = function (ev) {
+                                console.log("db upgrade", { zelf: this, ev: ev });
+                                var db = this.result;
+                                var tableEntries = db.createObjectStore(zelf.dbTable);
+                            };
+                            opReq.onsuccess = function (ev) {
+                                zelf.isInitialized = true;
+                                zelf.dbRef = opReq.result;
+                                resolve(true);
+                            };
+                            return [2 /*return*/];
+                        });
+                    }); })];
+            });
+        }); };
+        this.dbTable = table;
     }
-    DbMap.getDbAsync = function () {
+    DbMap.getTableAsync = function (tableName) {
+        return __awaiter(this, void 0, void 0, function () {
+            var map;
+            return __generator(this, function (_a) {
+                if (!DbMap.tables[tableName]) {
+                    map = new DbMap(tableName);
+                    DbMap.tables[tableName] = map;
+                }
+                return [2 /*return*/, DbMap.tables[tableName]];
+            });
+        });
+    };
+    DbMap.prototype.getDbAsync = function () {
+        var zelf = this;
         if (this.dbRef !== undefined) {
             return Promise.resolve(this.dbRef);
         }
@@ -68,222 +112,148 @@ var DbMap = /** @class */ (function () {
             opReq.onerror = failFunc;
             opReq.onblocked = failFunc;
             opReq.onsuccess = function (ev) {
-                DbMap.isInitialized = true;
-                DbMap.dbRef = opReq.result;
-                resolve(DbMap.dbRef);
+                zelf.isInitialized = true;
+                zelf.dbRef = opReq.result;
+                resolve(zelf.dbRef);
             };
         });
     };
-    DbMap.clearAsync = function () {
+    DbMap.prototype.clearAsync = function () {
         return __awaiter(this, void 0, void 0, function () {
             var db, scope, store;
-            return __generator(this, function (_b) {
-                switch (_b.label) {
-                    case 0: return [4 /*yield*/, DbMap.getDbAsync()];
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this.getDbAsync()];
                     case 1:
-                        db = _b.sent();
-                        scope = db.transaction(C_DB_STORE, "readwrite");
-                        store = scope.objectStore(C_DB_STORE);
+                        db = _a.sent();
+                        scope = db.transaction(this.dbTable, "readwrite");
+                        store = scope.objectStore(this.dbTable);
                         store.clear();
                         return [4 /*yield*/, DbMapUtil.promisifyTransaction(scope)];
                     case 2:
-                        _b.sent();
+                        _a.sent();
                         return [2 /*return*/];
                 }
             });
         });
     };
-    DbMap.putAsync = function (key, value) {
+    DbMap.prototype.putAsync = function (key, value) {
         return __awaiter(this, void 0, void 0, function () {
             var db, scope, store;
-            return __generator(this, function (_b) {
-                switch (_b.label) {
-                    case 0: return [4 /*yield*/, DbMap.getDbAsync()];
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this.getDbAsync()];
                     case 1:
-                        db = _b.sent();
-                        scope = db.transaction(C_DB_STORE, "readwrite");
-                        store = scope.objectStore(C_DB_STORE);
+                        db = _a.sent();
+                        scope = db.transaction(this.dbTable, "readwrite");
+                        store = scope.objectStore(this.dbTable);
                         store.put(value, key);
                         return [4 /*yield*/, DbMapUtil.promisifyTransaction(scope)];
                     case 2:
-                        _b.sent();
+                        _a.sent();
                         return [2 /*return*/];
                 }
             });
         });
     };
-    DbMap.getAsync = function (key) {
+    DbMap.prototype.getAsync = function (key) {
         return __awaiter(this, void 0, void 0, function () {
             var db, scope, store, req;
-            return __generator(this, function (_b) {
-                switch (_b.label) {
-                    case 0: return [4 /*yield*/, DbMap.getDbAsync()];
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this.getDbAsync()];
                     case 1:
-                        db = _b.sent();
-                        scope = db.transaction(C_DB_STORE, "readonly");
-                        store = scope.objectStore(C_DB_STORE);
+                        db = _a.sent();
+                        scope = db.transaction(this.dbTable, "readonly");
+                        store = scope.objectStore(this.dbTable);
                         req = store.get(key);
                         return [4 /*yield*/, DbMapUtil.promisifyTransaction(scope)];
                     case 2:
-                        _b.sent();
+                        _a.sent();
                         return [2 /*return*/, req.result];
                 }
             });
         });
     };
-    DbMap.getCountAsync = function () {
+    DbMap.prototype.getCountAsync = function () {
         return __awaiter(this, void 0, void 0, function () {
             var db, scope, store, req;
-            return __generator(this, function (_b) {
-                switch (_b.label) {
-                    case 0: return [4 /*yield*/, DbMap.getDbAsync()];
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this.getDbAsync()];
                     case 1:
-                        db = _b.sent();
-                        scope = db.transaction(C_DB_STORE, "readonly");
-                        store = scope.objectStore(C_DB_STORE);
-                        req = store.count(C_DB_STORE);
+                        db = _a.sent();
+                        scope = db.transaction(this.dbTable, "readonly");
+                        store = scope.objectStore(this.dbTable);
+                        req = store.count(this.dbTable);
                         return [4 /*yield*/, DbMapUtil.promisifyTransaction(scope)];
                     case 2:
-                        _b.sent();
+                        _a.sent();
                         return [2 /*return*/, req.result];
                 }
             });
         });
     };
-    DbMap.deleteAsync = function (key) {
+    DbMap.prototype.deleteAsync = function (key) {
         return __awaiter(this, void 0, void 0, function () {
             var db, scope, store, req;
-            return __generator(this, function (_b) {
-                switch (_b.label) {
-                    case 0: return [4 /*yield*/, DbMap.getDbAsync()];
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this.getDbAsync()];
                     case 1:
-                        db = _b.sent();
-                        scope = db.transaction(C_DB_STORE, "readonly");
-                        store = scope.objectStore(C_DB_STORE);
+                        db = _a.sent();
+                        scope = db.transaction(this.dbTable, "readwrite");
+                        store = scope.objectStore(this.dbTable);
                         req = store["delete"](key);
                         return [4 /*yield*/, DbMapUtil.promisifyTransaction(scope)];
                     case 2:
-                        _b.sent();
+                        _a.sent();
                         return [2 /*return*/];
                 }
             });
         });
     };
-    DbMap.listKeysAsync = function () {
+    DbMap.prototype.listKeysAsync = function () {
         return __awaiter(this, void 0, void 0, function () {
             var db, scope, store, req;
-            return __generator(this, function (_b) {
-                switch (_b.label) {
-                    case 0: return [4 /*yield*/, DbMap.getDbAsync()];
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0: return [4 /*yield*/, this.getDbAsync()];
                     case 1:
-                        db = _b.sent();
-                        scope = db.transaction(C_DB_STORE, "readonly");
-                        store = scope.objectStore(C_DB_STORE);
+                        db = _a.sent();
+                        scope = db.transaction(this.dbTable, "readonly");
+                        store = scope.objectStore(this.dbTable);
                         req = store.getAllKeys();
                         return [4 /*yield*/, DbMapUtil.promisifyTransaction(scope)];
                     case 2:
-                        _b.sent();
+                        _a.sent();
                         return [2 /*return*/, req.result];
                 }
             });
         });
     };
-    var _a;
-    _a = DbMap;
-    DbMap.isInitialized = false;
-    DbMap.dbRef = undefined;
-    DbMap.resetSchemaAsync = function (clearCache) {
-        if (clearCache === void 0) { clearCache = false; }
-        return __awaiter(_a, void 0, void 0, function () {
-            var isInit, isSuccess;
-            return __generator(_a, function (_b) {
-                switch (_b.label) {
-                    case 0:
-                        if (!clearCache && this.isInitialized) {
-                            return [2 /*return*/];
-                        }
-                        return [4 /*yield*/, DbMap.isSchemaInitializedAsync()];
-                    case 1:
-                        isInit = _b.sent();
-                        if (!isInit) return [3 /*break*/, 3];
-                        return [4 /*yield*/, DbMap.clearSchemaAsync()];
-                    case 2:
-                        _b.sent();
-                        _b.label = 3;
-                    case 3: return [4 /*yield*/, DbMap.initSchemaAsync()];
-                    case 4:
-                        isSuccess = _b.sent();
-                        return [2 /*return*/];
-                }
-            });
-        });
-    };
-    DbMap.isSchemaInitializedAsync = function () { return __awaiter(_a, void 0, void 0, function () {
-        var dbs;
-        return __generator(_a, function (_b) {
-            switch (_b.label) {
-                case 0: return [4 /*yield*/, window.indexedDB.databases()];
-                case 1:
-                    dbs = _b.sent();
-                    return [2 /*return*/, dbs.filter(function (x) { return x.name === C_DB_NAME; }).length > 0];
-            }
-        });
-    }); };
-    DbMap.clearSchemaAsync = function () { return __awaiter(_a, void 0, void 0, function () {
-        var _this = _a;
-        return __generator(_a, function (_b) {
-            return [2 /*return*/, new Promise(function (resolve, reject) { return __awaiter(_this, void 0, void 0, function () {
-                    var dbs, found, task;
-                    return __generator(this, function (_b) {
-                        switch (_b.label) {
-                            case 0:
-                                DbMap.isInitialized = false;
-                                DbMap.dbRef = undefined;
-                                return [4 /*yield*/, window.indexedDB.databases()];
-                            case 1:
-                                dbs = _b.sent();
-                                found = dbs.filter(function (x) { return x.name === C_DB_NAME; }).length > 0;
-                                if (!found) {
-                                    resolve();
-                                    return [2 /*return*/];
-                                }
-                                task = window.indexedDB.deleteDatabase(C_DB_NAME);
-                                task.onsuccess = function () { return resolve(); };
-                                task.onerror = function () { return reject(); };
-                                task.onblocked = function () { return reject(); };
-                                return [2 /*return*/];
-                        }
-                    });
-                }); })];
-        });
-    }); };
-    DbMap.initSchemaAsync = function () { return __awaiter(_a, void 0, void 0, function () {
-        var _this = _a;
-        return __generator(_a, function (_b) {
-            return [2 /*return*/, new Promise(function (resolve, reject) { return __awaiter(_this, void 0, void 0, function () {
-                    var opReq, failFunc;
-                    return __generator(this, function (_b) {
-                        console.log("Initializing ".concat(C_DB_NAME, " v").concat(C_DB_VERS, " schema."));
-                        opReq = window.indexedDB.open(C_DB_NAME, C_DB_VERS);
-                        failFunc = function () { console.error("Failed to init ".concat(C_DB_NAME, " schema.")); reject(false); };
-                        opReq.onerror = failFunc;
-                        opReq.onblocked = failFunc;
-                        opReq.onupgradeneeded = function (ev) {
-                            console.log("db upgrade", { zelf: this, ev: ev });
-                            var db = this.result;
-                            var tableEntries = db.createObjectStore("entries");
-                            // tableEntries.createIndex("EXPIRE_TIME", "forceExpireAt", { unique: false });
-                            // tableEntries.createIndex("LAST_USED", "lastUsed", { unique: false });
-                        };
-                        opReq.onsuccess = function (ev) {
-                            DbMap.isInitialized = true;
-                            DbMap.dbRef = opReq.result;
-                            resolve(true);
-                        };
-                        return [2 /*return*/];
-                    });
-                }); })];
-        });
-    }); };
+    DbMap.tables = {};
     return DbMap;
 }());
+var initFunc = function () { return __awaiter(_this, void 0, void 0, function () {
+    var dbs;
+    var _a;
+    return __generator(this, function (_b) {
+        switch (_b.label) {
+            case 0:
+                _a = {};
+                return [4 /*yield*/, DbMap.getTableAsync('fresh')];
+            case 1:
+                _a.fresh = (_b.sent());
+                return [4 /*yield*/, DbMap.getTableAsync('cache')];
+            case 2:
+                _a.cache = (_b.sent());
+                return [4 /*yield*/, DbMap.getTableAsync('yeet')];
+            case 3:
+                dbs = (_a.yeet = (_b.sent()),
+                    _a);
+                window.dbs = dbs;
+                return [2 /*return*/, dbs];
+        }
+    });
+}); };
